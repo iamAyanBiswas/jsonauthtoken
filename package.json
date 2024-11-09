@@ -12,5 +12,17 @@
     "test": "node index.js"
   },
   "author": "Ayan Biswas",
-  "license": "ISC"
+  "license": "ISC",
+  "keywords": [
+    "jat",
+    "jwt",
+    "jsonauthtoken",
+    "jsonwebtoken",
+    "auth",
+    "authentication",
+    "sha256",
+    "sha384",
+    "sha512"
+  ]
 }
+
