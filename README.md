@@ -38,7 +38,7 @@ let encToken = jat().create(
     {
         data: {                       // Data payload
             status: true,
-            name:'Arpan Biswas'
+            name:'Arpan Biswas',
             dob: '15.11.2008'
         }
     }
