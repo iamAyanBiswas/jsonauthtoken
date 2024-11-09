@@ -4,6 +4,10 @@
   "description": "jsonauthtoken is a JavaScript library to secure authentication.",
   "main": "index.js",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iamAyanBiswas/jsonauthtoken"
+  },
   "scripts": {
     "test": "node index.js"
   },
