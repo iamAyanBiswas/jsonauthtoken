@@ -1,6 +1,6 @@
 {
   "name": "jsonauthtoken",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "jsonauthtoken is a JavaScript library to secure authentication.",
   "main": "index.js",
   "type": "module",
@@ -25,4 +25,3 @@
     "sha512"
   ]
 }
-
