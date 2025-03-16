@@ -1,7 +1,6 @@
-import exp from 'constants';
 import crypto from 'crypto'
 
-function decryption(encryptedToken, password) {
+function decryption(encryptedToken:string, password:string):string {
     const parts = encryptedToken.split(':');
     const iv = Buffer.from(parts.shift(), 'hex'); // Get the IV
     const encryptedTokenBuffer = Buffer.from(parts.join(':'), 'hex');
@@ -9,7 +8,7 @@ function decryption(encryptedToken, password) {
     
     const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
     
-    let decrypted = decipher.update(encryptedTokenBuffer, 'binary', 'utf8');
+    let decrypted = decipher.update(encryptedTokenBuffer, null, 'utf8');
     decrypted += decipher.final('utf8');
     
     return decrypted;

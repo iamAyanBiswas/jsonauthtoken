@@ -1,28 +1,29 @@
-import encoading from './lib/encoading.lib.js'
-import decoading from './lib/decoading.lib.js'
-import signature from './lib/signature.lib.js'
-import encryption from './lib/encryption.lib.js'
-import decryption from './lib/decryption.lib.js'
-import { algoMatching, parseExpiration, isExpired } from './lib/functions.lib.js'
+import encoading from './lib/encoading.lib'
+import decoading from './lib/decoading.lib'
+import signature from './lib/signature.lib'
+import encryption from './lib/encryption.lib'
+import decryption from './lib/decryption.lib'
+import { algoMatching, parseExpiration, isExpired } from './lib/functions.lib'
+
+//global variable 
+const algorithms: AlgorithmArray = ['sha256', 'sha384', 'sha512']
 
 function jat() {
 
 
-    const algorithms = ['sha256', 'sha384', 'sha512']
 
     /////////////////////---------------  create token  ---------------------/////////////////////////
-    const create = (keys, headers = {}, payloads = {}) => {
+    const create = (keys: KeysType, headers:HeaderForCreate = {}, payloads: any = {}):string => {
 
-        let {signKey, encKey} = keys
-        if(!signKey) throw new Error("please provide signkey");
-        if(!encKey) throw new Error("please provide encKey");
-        
+        let { signKey, encKey } = keys
+        if (!signKey) throw new Error("please provide signkey");
+        if (!encKey) throw new Error("please provide encKey");
 
-        let exp = ''
+        let exp: number
         if (headers.expiresAt) exp = parseExpiration(headers.expiresAt)
         else throw new Error("please provide token expire")
 
-        let algo = algoMatching(algorithms, 'sha512', headers.algo)
+        let algo = algoMatching(algorithms, 'sha512', headers.algorithm)
 
         let header = encoading({
             token: 'JAT',
@@ -43,14 +44,14 @@ function jat() {
 
 
     /////////////////////---------------  verify token  ---------------------/////////////////////////
-    const verify = (encryptedToken, keys) => {
+    const verify = (encryptedToken:string, keys:KeysType):HeaderAndPlayload => {
         let token = ''
-        let header = ''
+        let header:TokenHeaders
         let payload = ''
 
-        let {signKey, encKey} = keys
-        if(!signKey) throw new Error("please provide signkey");
-        if(!encKey) throw new Error("please provide encKey");
+        let { signKey, encKey } = keys
+        if (!signKey) throw new Error("please provide signkey");
+        if (!encKey) throw new Error("please provide encKey");
 
         //decrypt token
         try {
@@ -59,21 +60,21 @@ function jat() {
             throw new Error('unable to decrypt token')
         }
 
+        const [encodedHeader, encodedPayload, sign] = token.split('.');
+
         //verify token signature
-        let isSignVerified = signature().verifySign(token, signKey)
+        let isSignVerified = signature().verifySign({encodedHeader, encodedPayload, sign}, signKey)
         if (isSignVerified === false) {
             throw new Error('Invalid signature')
         }
 
         //
-        const [encodedHeader, encodedPayload, sign] = token.split('.');
-
         header = decoading(encodedHeader)
-        if(isExpired(header.expiresAt)) throw new Error('token is expired')
+        if (isExpired(header.expiresAt)) throw new Error('token is expired')
 
         payload = decoading(encodedPayload)
 
-        return {header,payload}
+        return { header, payload }
     }
     return { create, verify }
 }

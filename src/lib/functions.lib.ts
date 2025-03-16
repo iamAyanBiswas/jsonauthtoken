@@ -1,18 +1,20 @@
-function algoMatching(algorithms, defaultOutput, input) {
+
+function algoMatching(algorithms:AlgorithmArray, defaultOutput:Algorithm | string, input:string):string {
 
     //check defaultOutput parameter
     if (!defaultOutput) throw new Error('defaultOutput parameter can not be empty')
+    let defaultAlgorithm=defaultOutput
 
     //find the correct algorithm name is given as 'input' or not , if is't return defaultOutput
     for (let i in algorithms) {
-        if (String(algorithms[i]) === String(input)) defaultOutput = algorithms[i]
+        if (algorithms[i] === input) defaultAlgorithm = algorithms[i]
     }
 
-    return defaultOutput
+    return defaultAlgorithm.toString()
 }
 
 
-function parseExpiration(input) {
+function parseExpiration(input:string):number {
     const regex = /^(\d+)([mhdMHDyY]|MIN)$/; // Regex to match number + unit
     const match = input.match(regex);
 
@@ -23,7 +25,7 @@ function parseExpiration(input) {
     const amount = parseInt(match[1], 10);
     const unit = match[2].toLowerCase(); // Normalize to lowercase
 
-    let seconds;
+    let seconds:number;
 
     switch (unit) {
         case 'y':
@@ -50,7 +52,7 @@ function parseExpiration(input) {
 }
 
 
-function isExpired(timeStamp) {
+function isExpired(timeStamp:number):boolean {
     let currentTime = Math.floor(Date.now() / 1000)
     if (timeStamp < currentTime) {
         return true

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "target": "ES2017",
+    "moduleResolution": "node",
+    "removeComments": true,
+    "sourceMap": false,
+
+    "outDir": "./dist",
+    "declaration": true,  
+    "rootDir": "./src",
+    "resolveJsonModule": true,
+
+    "skipLibCheck": true,
+    "allowJs": true,
+    // "checkJs": true,
+    
+    "strict": false,
+  },
+  "include": ["src","types.d.ts"],
+  "exclude": ["node_modules", "dist/*", "src/static"],
+  "lib": ["es6"]
+}

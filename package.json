@@ -1,18 +1,26 @@
 {
   "name": "jsonauthtoken",
   "version": "1.0.1",
-  "description": "jsonauthtoken is a JavaScript library to secure authentication.",
-  "main": "index.js",
-  "type": "module",
+  "description": "jsonauthtoken is a JavaScript/TypeScript library to secure authentication.",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/iamAyanBiswas/jsonauthtoken"
   },
   "scripts": {
-    "test": "node index.js"
+    "test": "node dist/index.js",
+    "start": "tsc && node dist/index.js"
   },
   "author": "Ayan Biswas",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iamAyanBiswas/jsonauthtoken/issues"
+  },
+  "homepage": "https://github.com/iamAyanBiswas/jsonauthtoken#readme",
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3"
+  },
   "keywords": [
     "jat",
     "jwt",

@@ -1,0 +1,11 @@
+# Exclude the TypeScript source folder (not needed in the package)
+src/
+
+# Exclude Git files and metadata
+.git/
+.gitignore
+
+# Exclude TypeScript config and other unnecessary files
+tsconfig.json
+.tsbuildinfo
+*.log

@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-function encryption(password,token){
+function encryption(password:string,token:string):string{
     const iv = crypto.randomBytes(16); // Initialization vector
     const key = crypto.scryptSync(password, 'salt', 32); // Key derivation
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);

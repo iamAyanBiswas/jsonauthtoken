@@ -3,7 +3,7 @@ import decoading from './decoading.lib.js';
 
 const signature = () => {
 
-    const createSign = (algorithm, key, header, payload) => {
+    const createSign = (algorithm:string, key:string, header:string, payload:string) => {
         const signature = crypto
             .createHmac(algorithm, key)
             .update(header + '.' + payload)
@@ -11,13 +11,12 @@ const signature = () => {
         return signature
     }
 
-    const verifySign = (token,key) => {
-        const [encodedHeader, encodedPayload, signature] = token.split('.');
-        const header= decoading(encodedHeader)
+    const verifySign = (tokens:DecryptedTokenParts,key:string):boolean => {
+        const header= decoading(tokens.encodedHeader)
 
-        let newSign=createSign(header.algorithm, key, encodedHeader, encodedPayload)
+        let newSign=createSign(header.algorithm, key, tokens.encodedHeader, tokens.encodedPayload)
 
-        if(newSign == signature) return true
+        if(newSign === tokens.sign) return true
         else return false
     }
     return { createSign, verifySign }
