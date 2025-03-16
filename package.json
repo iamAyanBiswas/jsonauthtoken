@@ -1,6 +1,6 @@
 {
   "name": "jsonauthtoken",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "jsonauthtoken is a JavaScript/TypeScript library to secure authentication.",
   "main": "dist/index.js",
   "repository": {

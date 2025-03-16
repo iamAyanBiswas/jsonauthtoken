@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import decoading from './decoading.lib.js';
+import decoading from './decoading.lib';
 
 const signature = () => {
 
