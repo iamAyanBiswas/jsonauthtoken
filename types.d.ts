@@ -1,43 +1,67 @@
+import { RUNTIME } from "./src/config/name.config";
+
 declare global {
-    export type Algorithm = 'sha256' | 'sha384' | 'sha512';
-    export type AlgorithmArray = ['sha256', 'sha384', 'sha512']
 
-    //type for keys input 
-    interface KeysType {
-        signKey: string;
-        encKey: string;
+    type TimeUnit = 'S' | 'MIN' | 'H' | 'D' | 'M' | 'Y';
+    type ExpirationString = `${number}${TimeUnit}` | `${number}${Lowercase<TimeUnit>}`;
+    type JATTime = number | ExpirationString;
+
+    interface GenerateKeyPair {
+        privateKey: string
+        publicKey: string
     }
 
-    //type for header at create fn  
-    interface HeaderForCreate {
-        expiresAt?: string;
-        algorithm?: Algorithm;
+    type Runtime = 'node' | 'web' | 'edge';
+    type EncryptionAlgorithmType = 'symmetric' | 'asymmetric';
+
+    interface AlgorithmDetails {
+        name: string;
+        value: string
+        type: EncryptionAlgorithmType;
     }
 
-    //type for header at create fn 
-    interface HeaderForVerify {
-        expiresAt?: string;
-        algorithm?: Algorithm;
+    interface RuntimeWiseAlgorithmMap {
+        node: 'AES-256-GCM' | 'RSA+A256GCM'
+        edge: 'AES-GCM' | 'RSA+AES-GCM'
+        web: 'AES-GCM' | 'RSA+AES-GCM'
     }
 
-    //
-    interface DecryptedTokenParts {
-        encodedHeader: string;
-        encodedPayload: string;
-        sign: string
+    type RuntimeWiseAlgorithm<R extends Runtime> = RuntimeWiseAlgorithmMap[R];
+
+    interface JATConfig<R extends Runtime = Runtime> {
+        runtime?: R
+        dev?: boolean
     }
 
-    interface TokenHeaders {
-        token: 'JAT';
-        algorithm: string;
-        createAt: number;
-        expiresAt: number;
+    interface CreateTokenConfig<R extends Runtime> {
+        key: string
+        exp?: JATTime
+        algo?: RuntimeWiseAlgorithm<R>
     }
 
-    interface HeaderAndPlayload{
-        header:TokenHeaders;
-        payload:any
+    interface BaseTokenMetaData<R extends Runtime> {
+        runtime: Runtime;
+        algo: RuntimeWiseAlgorithm<R>;
+        v: string;
+        iv: string;
     }
+
+ type TokenMetaData<R extends Runtime> =
+  | (BaseTokenMetaData<R> & {
+      runtime: 'node';
+      tag: string;
+    } & (
+      | { type: 'symmetric'; encryptedKey?: never }
+      | { type: 'asymmetric'; encryptedKey: string }
+    ))
+  | (BaseTokenMetaData<R> & {
+      runtime: 'web' | 'edge';
+      tag?: never;
+    } & (
+      | { type: 'symmetric'; encryptedKey?: never }
+      | { type: 'asymmetric'; encryptedKey: string }
+    ));
+
 }
 
 export { };

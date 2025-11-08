@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "CommonJS",
     "esModuleInterop": true,
-    "target": "ES2017",
+    "target": "esnext",
     "moduleResolution": "node",
     "removeComments": true,
     "sourceMap": false,
@@ -20,5 +20,5 @@
   },
   "include": ["src","types.d.ts"],
   "exclude": ["node_modules", "dist/*", "src/static"],
-  "lib": ["es6"]
+  "lib": ["esnext"]
 }

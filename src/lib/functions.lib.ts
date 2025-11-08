@@ -1,58 +1,61 @@
+import { SUPPORTED_ALGORITHM } from "../config/algo.config";
+import encoading from "./encoading.lib";
+import decoading from "./decoading.lib";
+import { RUNTIME } from "../config/name.config"
 
-function algoMatching(algorithms:AlgorithmArray, defaultOutput:Algorithm | string, input:string):string {
-
-    //check defaultOutput parameter
-    if (!defaultOutput) throw new Error('defaultOutput parameter can not be empty')
-    let defaultAlgorithm=defaultOutput
-
-    //find the correct algorithm name is given as 'input' or not , if is't return defaultOutput
-    for (let i in algorithms) {
-        if (algorithms[i] === input) defaultAlgorithm = algorithms[i]
-    }
-
-    return defaultAlgorithm.toString()
+function tokenFormatCreate<R extends Runtime = Runtime>(meta: TokenMetaData<R>, encrypted: string,): string {
+    return `${encoading(meta)}:${encrypted}`
 }
 
+function tokenFormatVerify<R extends Runtime = Runtime>(token: string): { meta: TokenMetaData<R>; encrypted: string } {
+    const index = token.indexOf(":");
 
-function parseExpiration(input:string):number {
-    const regex = /^(\d+)([mhdMHDyY]|MIN)$/; // Regex to match number + unit
-    const match = input.match(regex);
-
-    if (!match) {
-        throw new Error('Invalid format. Use formats like 1M, 1Y, 1D, 1MIN.');
+    if (index === -1) {
+        throw new Error("Invalid token format");
     }
 
-    const amount = parseInt(match[1], 10);
-    const unit = match[2].toLowerCase(); // Normalize to lowercase
+    const metaPart = token.substring(0, index);
+    const encryptedPart = token.substring(index + 1);
 
-    let seconds:number;
+    const meta:TokenMetaData<R> = decoading(metaPart);
 
-    switch (unit) {
-        case 'y':
-            seconds = amount * 365 * 24 * 60 * 60; // Years to seconds
-            break;
-        case 'm':
-            seconds = amount * 30 * 24 * 60 * 60; // Months to seconds (approximation)
-            break;
-        case 'd':
-            seconds = amount * 24 * 60 * 60; // Days to seconds
-            break;
-        case 'h':
-            seconds = amount * 60 * 60; // Hours to seconds
-            break;
-        case 'min':
-            seconds = amount * 60; // Minutes to seconds
-            break;
-        default:
-            throw new Error('Unsupported time unit. Use M, Y, D, H, or MIN.');
+    if (!meta) {
+        throw new Error("Invalid token format")
+    }
+
+    const algorithm = SUPPORTED_ALGORITHM[meta.runtime]?.find(e => e.name === meta.algo)
+
+    if (!algorithm) {
+        throw new Error("Invalid token format")
+    }
+    if (algorithm.type !== meta.type) {
+        throw new Error("Invalid token format")
+    }
+    if (meta.type === 'asymmetric') {
+        if (!meta.encryptedKey) {
+            throw new Error("Invalid token format")
+        }
+    }
+    if (!meta.iv) {
+        throw new Error("Invalid token format")
+    }
+    if (!RUNTIME.includes(meta.runtime)) {
+        throw new Error("Invalid token format")
+    }
+    if(meta.runtime==='node'){
+        if (!meta.tag) {
+        throw new Error("Invalid token format")
+    }
+    }
+    if (!meta.v) {
+        throw new Error("Invalid token format")
     }
 
 
-    return Math.floor(Date.now() / 1000) + seconds; // Current time + expiration time
+    return { meta, encrypted: encryptedPart };
 }
 
-
-function isExpired(timeStamp:number):boolean {
+function isExpired(timeStamp: number): boolean {
     let currentTime = Math.floor(Date.now() / 1000)
     if (timeStamp < currentTime) {
         return true
@@ -63,6 +66,31 @@ function isExpired(timeStamp:number):boolean {
 }
 
 
+type Color = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white';
+function print({ dev = false, color = 'green' }: { dev?: boolean, color?: Color }, ...args: unknown[]): void {
+
+    if (!dev) return
+
+    const colors: Record<Color | 'reset', string> = {
+        red: '\x1b[31m',
+        green: '\x1b[32m',
+        yellow: '\x1b[33m',
+        blue: '\x1b[34m',
+        magenta: '\x1b[35m',
+        cyan: '\x1b[36m',
+        white: '\x1b[37m',
+        reset: '\x1b[0m',
+    };
+
+    if (typeof window !== 'undefined') {
+        // Browser or Edge: use CSS for coloring
+        console.log(`%c[jsonauthtoken]`, `color:${color}`, ...args);
+    } else {
+        // Node: use ANSI codes
+        const colorCode = colors[color] ?? colors.green;
+        console.log(`${colorCode}[jsonauthtoken]`, ...args, '\x1b[0m'); // reset at end
+    }
+}
 
 
-export { algoMatching, parseExpiration, isExpired }
+export { isExpired, tokenFormatCreate, tokenFormatVerify, print }

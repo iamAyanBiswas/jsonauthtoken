@@ -8,8 +8,8 @@
     "url": "https://github.com/iamAyanBiswas/jsonauthtoken"
   },
   "scripts": {
-    "test": "node dist/index.js",
-    "start": "tsc && node dist/index.js"
+    "build": "tsc",
+    "dev": "nodemon --watch src --ext ts --exec \"npm run build && node dist/test/index.js\""
   },
   "author": "Ayan Biswas",
   "license": "ISC",

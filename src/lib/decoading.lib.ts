@@ -1,4 +1,4 @@
-const decoading = (str: string):any => {
+const decoading = (str: string) => {
    // Replace URL-safe characters with standard Base64 characters
   const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
 
@@ -12,3 +12,4 @@ const decoading = (str: string):any => {
   };
 
 export default decoading
+
