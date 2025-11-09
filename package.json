@@ -1,6 +1,6 @@
 {
   "name": "jsonauthtoken",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "jsonauthtoken is a JavaScript/TypeScript library to secure authentication.",
   "main": "dist/index.js",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon --watch src --ext ts --exec \"npm run build && node dist/test/index.js\""
+    "dev": "nodemon --watch src --ext ts --exec \"npm run build && node dist/test.js\""
   },
   "author": "Ayan Biswas",
   "license": "ISC",
@@ -27,9 +27,6 @@
     "jsonauthtoken",
     "jsonwebtoken",
     "auth",
-    "authentication",
-    "sha256",
-    "sha384",
-    "sha512"
+    "authentication"
   ]
 }

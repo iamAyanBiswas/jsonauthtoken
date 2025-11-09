@@ -4,7 +4,7 @@ jsonauthtoken is a JavaScript library to secure authentication.
 
 ## Overview
 
-This project demonstrates the usage of the `jsonauthtoken` package to create and verify secure encrypted authentication tokens and store sensitive datas. Tokens are used to sign and encrypt data for secure communication. The `jsonauthtoken` library provides methods to generate and verify tokens with configurable expiration times, hashing algorithms, and payload data.
+This project demonstrates the usage of the `jsonauthtoken` package to create and verify secure encrypted authentication tokens and store sensitive datas. Tokens are used to encrypt data for secure communication. The `jsonauthtoken` library provides methods to generate and verify tokens with configurable expiration times, encryption algorithms, payload data and also offer key generation.
 
 
 ## Node.js (Install)
@@ -20,47 +20,26 @@ npm install jsonauthtoken
 
 ### Usage
 
-To create jsonauthtoken:
 
 ```javascript
-import jat from "jsonauthtoken";
+import { JAT } from "jsonauthtoken";
 
-// Create a token
-let encToken = jat().create(
-    {
-        signKey: process.env.SIGN_KEY, // Signature key
-        encKey: process.env.ENC_KEY   // Encryption key
-    },
-    {
-        expiresAt: '4MIN',            // Token expiration time
-        algorithm: 'sha256'           // Optional: Hash algorithms list ['sha256', 'sha384', 'sha512'] 
-    },
-    {
-        data: {                       // Data payload
-            status: true,
-            name:'Arpan Biswas',
-            dob: '15.11.2008'
-        }
-    }
-);
+(async () => {
+    
+    const jat = JAT()
 
-console.log("encToken: ", encToken);
+    const payload = {
+        name: 'jsonauthtoken'
+    } as const
 
-```
+    //to create token
+    const token = await jat.create({ key: process.env.KEY }, payload)
 
-To decrypt and verify jsonauthtoken:
+    //to verify token
+    const verify =await jat.verify<typeof payload>(token, process.env.KEY)
 
-```javascript
-import jat from "jsonauthtoken";
+    console.log(verify)
 
-// Decrypt and verify jsonauthtoken
-
-let token = 'your-token-here';  // Replace with your generated token
-let datas = jat().verify(token, {
-    signKey: process.env.SIGN_KEY, // Signature key
-    encKey: process.env.ENC_KEY    // Encryption key
-});
-
-console.log("Enc Data: ", datas);
+})()
 
 ```
