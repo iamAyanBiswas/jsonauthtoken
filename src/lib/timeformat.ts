@@ -1,8 +1,4 @@
-
-
-
-
-export function jatTimeFormatter(input: JATTime): number {
+export function jatTimeFormatter(input: JsonAuthTokenExpiry): number {
   // If number → assume seconds directly
   if (typeof input === 'number') {
     if (input <= 0) {

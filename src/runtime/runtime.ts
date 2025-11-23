@@ -1,77 +1,74 @@
-import type { NodeCrypto } from "./node.crypto";
-import type { WebCrypto } from "./web.crypto";
+import type { NodeCrypto } from "./node.runtime";
+import type { WebCrypto } from "./web.runtime";
 import { SUPPORTED_ALGORITHM } from "../config/algo.config";
 import { tokenFormatVerify } from "../lib/functions.lib";
 
-export class Crypto {
+export class RuntimeCrypto {
 
   private node: NodeCrypto | undefined
   private web: WebCrypto | undefined
 
   private async getModule(runtime:Runtime):Promise<void> {
     if(runtime === 'node' && this.node === undefined){
-      const { NodeCrypto } = await import('./node.crypto')
+      const { NodeCrypto } = await import('./node.runtime')
       this.node = new NodeCrypto()
     }
     else if(runtime === 'web' && this.web === undefined){
-      const { WebCrypto } = await import('./web.crypto')
-      this.web = new WebCrypto()
-    }
-    else if(runtime === 'edge' && this.web === undefined){
-      const { WebCrypto } = await import('./web.crypto')
+      const { WebCrypto } = await import('./web.runtime')
       this.web = new WebCrypto()
     }
 }
 
 
   public async createToken(runtime: Runtime, algo: string, key: string, payload: any, exp: number) {
-    const algorithms = SUPPORTED_ALGORITHM[runtime]
-    const algoData = algorithms.find(({ name }) => { return name == algo })
+    return "IT is Random String"
+//     const algorithms = SUPPORTED_ALGORITHM[runtime]
+//     const algoData = algorithms.find(({ name }) => { return name == algo })
 
-    if (!algoData) {
-      throw new Error(`Algorithm ${algo} is not supported for ${runtime}`)
-    }
+//     if (!algoData) {
+//       throw new Error(`Algorithm ${algo} is not supported for ${runtime}`)
+//     }
 
-    await this.getModule(runtime)
+//     await this.getModule(runtime)
 
-    //node runtime
-    if (runtime === 'node') {
-  // node asymmetric encryption
-  if(algoData.type === 'asymmetric') {
-  if (algoData.value !== 'ras+a256gcm') {
-    throw new Error(`Algorithm ${algoData.name} is not supported for asymmetric encryption`)
-  }
-  return this.node.encryptRSA(payload, key, exp)
-}
+//     //node runtime
+//     if (runtime === 'node') {
+//   // node asymmetric encryption
+//   if(algoData.type === 'asymmetric') {
+//   if (algoData.value !== 'ras+a256gcm') {
+//     throw new Error(`Algorithm ${algoData.name} is not supported for asymmetric encryption`)
+//   }
+//   return await this.node.encryptRSA(payload, key, exp)
+// }
 
-      //node symmetric encryption
-      else {
-  if (algoData.value !== 'aes-256-gcm') {
-    throw new Error(`Algorithm ${algoData.name} is not supported for symmetric encryption`)
-  }
-  return this.node.encrypt(algoData.value, key, payload, exp)
-}
-    }
+//       //node symmetric encryption
+//       else {
+//   if (algoData.value !== 'aes-256-gcm') {
+//     throw new Error(`Algorithm ${algoData.name} is not supported for symmetric encryption`)
+//   }
+//   return await this.node.encrypt(algoData.value, key, payload, exp)
+// }
+//     }
 
-    //web and edge runtime
-    else {
+//     //web and edge runtime
+//     else {
 
-  //web asymmetric encryption
-  if (algoData.type === 'asymmetric') {
-    if (algoData.value !== 'RSA+AES-GCM') {
-      throw new Error(`Algorithm ${algoData.name} is not supported for asymmetric encryption`)
-    }
-    return await this.web.encryptRSA(payload, key, exp)
-  }
+//   //web asymmetric encryption
+//   if (algoData.type === 'asymmetric') {
+//     if (algoData.value !== 'RSA+AES-GCM') {
+//       throw new Error(`Algorithm ${algoData.name} is not supported for asymmetric encryption`)
+//     }
+//     return await this.web.encryptRSA(payload, key, exp)
+//   }
 
-  //web symmetric encryption
-  else {
-    if (algoData.value !== 'AES-GCM') {
-      throw new Error(`Algorithm ${algoData.name} is not supported for symmetric encryption`)
-    }
-    return await this.web.encrypt(algoData.value, key, payload, exp)
-  }
-}
+//   //web symmetric encryption
+//   else {
+//     if (algoData.value !== 'AES-GCM') {
+//       throw new Error(`Algorithm ${algoData.name} is not supported for symmetric encryption`)
+//     }
+//     return await this.web.encrypt(algoData.value, key, payload, exp)
+//   }
+// }
   }
 
 
@@ -93,7 +90,7 @@ export class Crypto {
       if (algo !== 'RSA+A256GCM') {
         throw new Error(`Algorithm ${algo} is not supported for asymmetric encryption`)
       }
-      return this.node.decryptRSA<T>(key, encryptedKey, { iv, encrypted, tag })
+      return await this.node.decryptRSA<T>(key, encryptedKey, { iv, encrypted, tag })
     }
 
     //node symmetric encryption
@@ -101,7 +98,7 @@ export class Crypto {
       if (algo !== 'AES-256-GCM') {
         throw new Error(`Algorithm ${algo} is not supported for symmetric encryption`)
       }
-      return this.node.decrypt<T>("aes-256-gcm", key, { iv, encrypted, tag })
+      return await this.node.decrypt<T>("aes-256-gcm", key, { iv, encrypted, tag })
     }
   }
 
@@ -135,10 +132,10 @@ export class Crypto {
   //node runtime
   if (runtime === 'node') {
     if (type === 'keyPair') {
-      return this.node.rsaPrivatePublicKeyGeneration(); // returns GenerateKeyPair
+      return await this.node.rsaPrivatePublicKeyGeneration(); // returns GenerateKeyPair
     } else {
       if (!privateKeyPem) throw new Error('privateKeyPem is required');
-      return this.node.rsaPublicKeyGeneration(privateKeyPem); // returns string
+      return await this.node.rsaPublicKeyGeneration(privateKeyPem); // returns string
     }
   }
 

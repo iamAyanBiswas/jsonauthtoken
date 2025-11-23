@@ -3,7 +3,7 @@ import { detectRuntime } from './config/runtime.config'
 import { DEFAULT_ALGORITHM, SUPPORTED_ALGORITHM } from './config/algo.config'
 import { isExpired, print } from './lib/functions.lib'
 import { jatTimeFormatter } from './lib/timeformat'
-import { Crypto } from './crypto/crypto'
+import { RuntimeCrypto } from './runtime/runtime'
 
 
 
@@ -11,7 +11,7 @@ import { Crypto } from './crypto/crypto'
 class JATClass<R extends Runtime = Runtime> {
     private runtime: R
     private dev: boolean = false
-    private crypto = new Crypto()
+    private crypto = new RuntimeCrypto()
 
     constructor(config?: JATConfig<R>) {
         try {
@@ -79,7 +79,7 @@ class JATClass<R extends Runtime = Runtime> {
 }
 
 class PrivatePublicKeyGeneration {
-    private crypto = new Crypto()
+    private crypto = new RuntimeCrypto()
     public async generateKeyPair(runtime?: Runtime, dev?: boolean): Promise<GenerateKeyPair> {
         let finalRuntime: Runtime = detectRuntime()
         const development = dev === true ? true : false

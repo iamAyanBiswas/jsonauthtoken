@@ -1,17 +1,22 @@
-import { RUNTIME } from "./src/config/name.config";
 
 declare global {
+    interface JsonAuthToken{
+        create({key,exp,algo}:{key:string,exp:JsonAuthTokenExpiry,algo:RuntimeWiseAlgorithmMap[Runtime]}, payload: any):string
+    }
 
+    //timeformat type
     type TimeUnit = 'S' | 'MIN' | 'H' | 'D' | 'M' | 'Y';
     type ExpirationString = `${number}${TimeUnit}` | `${number}${Lowercase<TimeUnit>}`;
-    type JATTime = number | ExpirationString;
+    type JsonAuthTokenExpiry = number | ExpirationString;
+
+
 
     interface GenerateKeyPair {
         privateKey: string
         publicKey: string
     }
 
-    type Runtime = 'node' | 'web' | 'edge';
+    type Runtime = 'node' | 'web';
     type EncryptionAlgorithmType = 'symmetric' | 'asymmetric';
 
     interface AlgorithmDetails {

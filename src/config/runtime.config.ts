@@ -4,13 +4,14 @@ export function detectRuntime(): Runtime {
     return 'node';
   }
 
+  ///...other runtime
   if (typeof window !== 'undefined' && window.crypto?.subtle) {
     return 'web';
   }
 
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.subtle) {
-    return 'edge';
+    return 'web';
   }
 
-  return 'node'
+  return 'web'
 }
