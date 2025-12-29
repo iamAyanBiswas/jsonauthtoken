@@ -7,12 +7,12 @@ import { WebCrypto } from './runtime/web.runtime'
 
 
 
-class JATClass {
+class WebCryptoModule implements WebCryptoModuleType {
     private dev: boolean = false
     private runtime: 'web'
     private web = new WebCrypto()
 
-    constructor({ runtime, dev }: { dev: boolean, runtime: 'web' }) {
+    constructor({ runtime, dev }: { dev?: boolean, runtime?: 'web' } = {}) {
         try {
             if (dev) this.dev = true
             if (!WEB_RUNTIME.includes(runtime)) {
@@ -125,7 +125,7 @@ class PrivatePublicKeyGeneration {
     private web = new WebCrypto()
 
     public async generateKeyPair(runtime?: 'web', dev?: boolean): Promise<GenerateKeyPair> {
-        let finalRuntime:'web'='web'
+        let finalRuntime: 'web' = 'web'
         const development = dev === true ? true : false
         try {
             if (runtime) {
@@ -176,7 +176,7 @@ const generatePublicKey = (privateKeyPem: string, options?: { runtime?: 'web'; d
     return p2kgObject.generatePublicKey(privateKeyPem, runtime, dev);
 };
 
-export const JAT = ({ runtime, dev }: { runtime?: 'web', dev?: boolean } = {}) => new JATClass({ runtime: runtime, dev: dev })
+export const JAT = ({ runtime, dev }: { runtime?: 'web', dev?: boolean } = {}) => new WebCryptoModule({ runtime: runtime, dev: dev })
 export const getSupportedAlgorithm = () => SUPPORTED_ALGORITHM['web']
 
 export const P2KG = {
@@ -188,4 +188,5 @@ const jsonauthtoken = {
     JAT: JAT,
     P2KG: P2KG
 }
+
 export default jsonauthtoken

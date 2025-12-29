@@ -8,19 +8,24 @@ import { NodeCrypto } from './runtime/node.runtime'
 
 
 
-class JATClass {
+export class NodeCryptoModule<R extends NodeRuntime> {
     private dev: boolean = false
-    private runtime: 'web'|'node'
+    private runtime: R
     private web = new WebCrypto()
-    private node=new NodeCrypto()
+    private node = new NodeCrypto()
 
-    constructor({ runtime, dev }: { dev: boolean, runtime: 'web'|'node' }) {
+    constructor({ runtime, dev }: { dev?: boolean, runtime?: R } = {}) {
         try {
             if (dev) this.dev = true
-            if (!NODE_RUNTIME.includes(runtime)) {
-                throw new Error("Unsupported runtime")
+            if (runtime) {
+                if (!NODE_RUNTIME.includes(runtime)) {
+                    throw new Error("Unsupported runtime")
+                }
+                this.runtime = runtime
             }
-            this.runtime = 'web'
+            else {
+                this.runtime = 'web' as R
+            }
             print({ dev: this.dev }, 'Current Runtime: ', this.runtime)
 
         } catch (error) {
@@ -32,26 +37,46 @@ class JATClass {
     private async createToken(algo: string, key: string, payload: any, exp: number) {
         const algorithms = SUPPORTED_ALGORITHM[this.runtime]
         const algoData = algorithms.find(({ name }) => { return name == algo })
-
+        6
         if (!algoData) {
             throw new Error(`Algorithm ${algo} is not supported for ${this.runtime}`)
         }
 
         //web runtime
-        //web asymmetric encryption
-        if (algoData.type === 'asymmetric') {
-            if (algoData.value !== 'RSA+AES-GCM') {
-                throw new Error(`Algorithm ${algoData.name} is not supported for asymmetric encryption`)
-            }
-            return await this.web.encryptRSA(payload, key, exp)
-        }
+        if (this.runtime === 'web') {
 
-        //web symmetric encryption
-        else {
-            if (algoData.value !== 'AES-GCM') {
-                throw new Error(`Algorithm ${algoData.name} is not supported for symmetric encryption`)
+            //web asymmetric encryption
+            if (algoData.type === 'asymmetric') {
+                if (algoData.value !== 'RSA+AES-GCM') {
+                    throw new Error(`Algorithm ${algoData.name} is not supported for asymmetric encryption`)
+                }
+                return await this.web.encryptRSA(payload, key, exp)
             }
-            return await this.web.encrypt(algoData.value, key, payload, exp)
+
+            //web symmetric encryption
+            else {
+                if (algoData.value !== 'AES-GCM') {
+                    throw new Error(`Algorithm ${algoData.name} is not supported for symmetric encryption`)
+                }
+                return await this.web.encrypt(algoData.value, key, payload, exp)
+            }
+        }
+        else {
+            //node asymmetric encryption
+            if (algoData.type === 'asymmetric') {
+                if (algoData.value !== 'rsa+a256gcm') {
+                    throw new Error(`Algorithm ${algoData.name} is not supported for asymmetric encryption`)
+                }
+                return await this.node.encryptRSA(payload, key, exp)
+            }
+
+            //node symmetric encryption
+            else {
+                if (algoData.value !== 'aes-256-gcm') {
+                    throw new Error(`Algorithm ${algoData.name} is not supported for symmetric encryption`)
+                }
+                return await this.node.encrypt(algoData.value, key, payload, exp)
+            }
         }
     }
 
@@ -64,25 +89,45 @@ class JATClass {
         }
 
         //web runtime
-        //web asymmetric encryption
-        if (type === 'asymmetric') {
-            if (algo !== 'RSA+AES-GCM') {
-                throw new Error(`Algorithm ${algo} is not supported for asymmetric encryption`)
+        if (runtime === 'web') {
+            //web asymmetric encryption
+            if (type === 'asymmetric') {
+                if (algo !== 'RSA+AES-GCM') {
+                    throw new Error(`Algorithm ${algo} is not supported for asymmetric encryption`)
+                }
+                return await this.web.decryptRSA<T>(key, encryptedKey, { iv, encrypted })
             }
-            return await this.web.decryptRSA<T>(key, encryptedKey, { iv, encrypted })
+
+            //web symmetric encryption
+            else {
+                if (algo !== 'AES-GCM') {
+                    throw new Error(`Algorithm ${algo} is not supported for symmetric encryption`)
+                }
+                return await this.web.decrypt<T>('AES-GCM', key, { iv, encrypted })
+            }
+        }
+        else {
+            //node asymmetric encryption
+            if (type === 'asymmetric') {
+                if (algo !== 'RSA+A256GCM') {
+                    throw new Error(`Algorithm ${algo} is not supported for asymmetric encryption`)
+                }
+                return await this.node.decryptRSA<T>(key, encryptedKey, { iv, encrypted, tag })
+            }
+
+            //node symmetric encryption
+            else {
+                if (algo !== 'AES-256-GCM') {
+                    throw new Error(`Algorithm ${algo} is not supported for symmetric encryption`)
+                }
+                return await this.node.decrypt<T>('aes-256-gcm', key, { iv, encrypted, tag })
+            }
         }
 
-        //web symmetric encryption
-        else {
-            if (algo !== 'AES-GCM') {
-                throw new Error(`Algorithm ${algo} is not supported for symmetric encryption`)
-            }
-            return await this.web.decrypt<T>('AES-GCM', key, { iv, encrypted })
-        }
     }
 
 
-    public async create({ key, exp, algo }: { key: string, exp: JsonAuthTokenExpiry, algo: RuntimeWiseAlgorithmMap['web'] }, payload: any) {
+    public async create({ key, exp, algo }: { key: string, exp: JsonAuthTokenExpiry, algo: RuntimeWiseAlgorithmMap[R] }, payload: any) {
 
         try {
             if (!key) {
@@ -90,7 +135,7 @@ class JATClass {
             }
 
             exp = exp ? jatTimeFormatter(exp) : jatTimeFormatter('5MIN')
-            algo = algo || RUNTIME_DEFAULT_ALGORITHM('web').name
+            const algorithm = algo || RUNTIME_DEFAULT_ALGORITHM('web').name
 
             return await this.createToken(algo, key, payload, exp)
 
@@ -127,7 +172,7 @@ class PrivatePublicKeyGeneration {
     private web = new WebCrypto()
 
     public async generateKeyPair(runtime?: 'web', dev?: boolean): Promise<GenerateKeyPair> {
-        let finalRuntime:'web'='web'
+        let finalRuntime: 'web' = 'web'
         const development = dev === true ? true : false
         try {
             if (runtime) {
@@ -178,8 +223,11 @@ const generatePublicKey = (privateKeyPem: string, options?: { runtime?: 'web'; d
     return p2kgObject.generatePublicKey(privateKeyPem, runtime, dev);
 };
 
-export const JAT = ({ runtime, dev }: { runtime?: 'web', dev?: boolean } = {}) => new JATClass({ runtime: runtime, dev: dev })
+export const JAT = <R extends NodeRuntime>({ runtime, dev }: { runtime?: R, dev?: boolean } = {}) => new NodeCryptoModule({ runtime: runtime, dev: dev })
 export const getSupportedAlgorithm = () => SUPPORTED_ALGORITHM['web']
+
+
+const jat = JAT({})
 
 export const P2KG = {
     generateKeyPair: generateKeyPair,
