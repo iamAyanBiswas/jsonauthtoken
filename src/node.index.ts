@@ -129,7 +129,7 @@ export class NodeCryptoModule<R extends NodeRuntime> {
     }
 
 
-    public async create({ key, exp, algo }: { key: string, exp: JsonAuthTokenExpiry, algo: RuntimeWiseAlgorithmMap[R] }, payload: any) {
+    public async create({ key, exp, algo }: { key: string, exp?: JsonAuthTokenExpiry, algo?: RuntimeWiseAlgorithmMap[R] }, payload: any) {
 
         try {
             if (!key) {

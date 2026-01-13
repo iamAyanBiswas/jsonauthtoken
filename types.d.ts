@@ -2,12 +2,12 @@
 export declare function JAT<T extends { runtime: 'web' | 'node'; dev?: boolean }>({ runtime, dev }?: T): T extends { runtime: 'node' } ? NodeJATInstance : WebJATInstance;
 
 export interface WebJATInstance {
-    create: ({ key, exp, algo }: { key: string, exp: JsonAuthTokenExpiry, algo: RuntimeWiseAlgorithmMap['web'] }, payload: any) => Promise<string>
+    create: ({ key, exp, algo }: { key: string, exp?: JsonAuthTokenExpiry, algo?: RuntimeWiseAlgorithmMap['web'] }, payload: any) => Promise<string>
     verify: <T>(token: string, key: string) => Promise<T>
 }
 
 export interface NodeJATInstance {
-    create: ({ key, exp, algo }: { key: string, exp: JsonAuthTokenExpiry, algo: RuntimeWiseAlgorithmMap['node'] }, payload: any) => Promise<string>
+    create: ({ key, exp, algo }: { key: string, exp?: JsonAuthTokenExpiry, algo?: RuntimeWiseAlgorithmMap['node'] }, payload: any) => Promise<string>
     verify: <T>(token: string, key: string) => Promise<T>
 }
 

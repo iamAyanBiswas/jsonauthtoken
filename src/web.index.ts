@@ -81,7 +81,7 @@ class WebCryptoModule {
     }
 
 
-    public async create({ key, exp, algo }: { key: string, exp: JsonAuthTokenExpiry, algo: RuntimeWiseAlgorithmMap['web'] }, payload: any) {
+    public async create({ key, exp, algo }: { key: string, exp?: JsonAuthTokenExpiry, algo?: RuntimeWiseAlgorithmMap['web'] }, payload: any) {
 
         try {
             if (!key) {
