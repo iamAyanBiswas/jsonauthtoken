@@ -1,3 +1,4 @@
+import { JsonAuthTokenExpiry, RuntimeWiseAlgorithmMap, GenerateKeyPair } from '../types';
 import { WEB_RUNTIME } from './config/name.config'
 import { RUNTIME_DEFAULT_ALGORITHM, SUPPORTED_ALGORITHM } from './config/algo.config'
 import { isExpired, print, tokenFormatVerify } from './lib/functions.lib'
@@ -7,7 +8,7 @@ import { WebCrypto } from './runtime/web.runtime'
 
 
 
-class WebCryptoModule implements WebCryptoModuleType {
+class WebCryptoModule {
     private dev: boolean = false
     private runtime: 'web'
     private web = new WebCrypto()
@@ -15,8 +16,8 @@ class WebCryptoModule implements WebCryptoModuleType {
     constructor({ runtime, dev }: { dev?: boolean, runtime?: 'web' } = {}) {
         try {
             if (dev) this.dev = true
-            if (!WEB_RUNTIME.includes(runtime)) {
-                throw new Error("Unsupported runtime")
+            if (runtime && !WEB_RUNTIME.includes(runtime)) {
+                throw new Error("Unsupported runtime (please select runtime 'web')")
             }
             this.runtime = 'web'
             print({ dev: this.dev }, 'Current Runtime: ', this.runtime)
@@ -54,7 +55,7 @@ class WebCryptoModule implements WebCryptoModuleType {
     }
 
     private async verifyToken<T>(token: string, key: string) {
-        const { meta, encrypted } = tokenFormatVerify(token)
+        const { meta, encrypted } = tokenFormatVerify(this.runtime, token)
         const { runtime, algo, type, v, iv, tag, encryptedKey } = meta
 
         if (this.runtime !== runtime) {
@@ -135,7 +136,7 @@ class PrivatePublicKeyGeneration {
                 finalRuntime = runtime
             }
             const { privateKey, publicKey } = await this.web.rsaPrivatePublicKeyGeneration()
-            print({ dev: development, color: 'green' }, 'Current Runtime: ', finalRuntime)
+            print({ dev: development, color: 'green' }, 'Current Runtime for Key Generation: ', finalRuntime)
             print({ dev: development, color: 'green' }, { privateKey, publicKey })
             return { privateKey, publicKey }
         } catch (error) {
@@ -156,7 +157,7 @@ class PrivatePublicKeyGeneration {
             }
 
             const publicKey = await this.web.rsaPublicKeyGeneration(privateKeyPem)
-            print({ dev: development, color: 'green' }, 'Current Runtime: ', finalRuntime)
+            print({ dev: development, color: 'green' }, 'Current Runtime for Key Generation: ', finalRuntime)
             print({ dev: development, color: 'green' }, publicKey)
             return publicKey
         } catch (error) {
@@ -177,7 +178,6 @@ const generatePublicKey = (privateKeyPem: string, options?: { runtime?: 'web'; d
 };
 
 export const JAT = ({ runtime, dev }: { runtime?: 'web', dev?: boolean } = {}) => new WebCryptoModule({ runtime: runtime, dev: dev })
-export const getSupportedAlgorithm = () => SUPPORTED_ALGORITHM['web']
 
 export const P2KG = {
     generateKeyPair: generateKeyPair,

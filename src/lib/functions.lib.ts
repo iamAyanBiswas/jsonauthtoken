@@ -1,13 +1,14 @@
+import { Runtimes, TokenMetaData } from "../../types";
 import { SUPPORTED_ALGORITHM } from "../config/algo.config";
 import encoading from "./encoading.lib";
 import decoading from "./decoading.lib";
 import { RUNTIME } from "../config/name.config"
 
 function tokenFormatCreate<R extends Runtimes = Runtimes>(meta: TokenMetaData<R>, encrypted: string,): string {
-    return `${encoading(meta)}:${encrypted}`
+    return `${encoading(meta.runtime, meta)}:${encrypted}`
 }
 
-function tokenFormatVerify<R extends Runtimes = Runtimes>(token: string): { meta: TokenMetaData<R>; encrypted: string } {
+function tokenFormatVerify<R extends Runtimes = Runtimes>(runtime: Runtimes, token: string): { meta: TokenMetaData<R>; encrypted: string } {
     const index = token.indexOf(":");
 
     if (index === -1) {
@@ -17,7 +18,7 @@ function tokenFormatVerify<R extends Runtimes = Runtimes>(token: string): { meta
     const metaPart = token.substring(0, index);
     const encryptedPart = token.substring(index + 1);
 
-    const meta: TokenMetaData<R> = decoading(metaPart);
+    const meta: TokenMetaData<R> = decoading(runtime, metaPart);
 
     if (!meta) {
         throw new Error("Invalid token format")

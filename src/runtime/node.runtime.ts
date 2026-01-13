@@ -1,19 +1,13 @@
 // src/crypto/node.crypto.ts
 import { tokenFormatCreate } from '../lib/functions.lib';
+import crypto from 'crypto'
 
 export class NodeCrypto {
 
-  private crypto!:typeof import('crypto')
-  
-  private async __init(){
-    if(!this.crypto) {
-      this.crypto= await import('crypto')
-    }
-  }
-  
+
   private _encrypt(algorithm: 'aes-256-gcm', key: Buffer<ArrayBufferLike>, payload: any) {
-    const iv = this.crypto.randomBytes(12);
-    const cipher = this.crypto.createCipheriv(algorithm, key, iv);
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
 
     const data = JSON.stringify(payload);
     let encrypted = cipher.update(data, 'utf8', 'base64');
@@ -31,34 +25,41 @@ export class NodeCrypto {
   ) {
     const { iv, encrypted, tag } = encryptedData;
 
-    const decipher = this.crypto.createDecipheriv(
+    const decipher = crypto.createDecipheriv(
       algorithm,
       key,
       Buffer.from(iv, 'base64')
     );
     decipher.setAuthTag(Buffer.from(tag, 'base64'));
 
-    let decrypted = decipher.update(encrypted, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
+    try {
+      let decrypted = decipher.update(encrypted, 'base64', 'utf8');
+      decrypted += decipher.final('utf8');
 
-    return JSON.parse(decrypted);
-
+      return JSON.parse(decrypted);
+    } catch (error) {
+      throw new Error('Invalid Key')
+    }
   }
 
 
 
-  private _rsaPublicKeyGeneration(privateKeyPem: string) {
-    const privateKeyObject = this.crypto.createPrivateKey({
+  private _rsaPublicKeyGeneration(privateKeyPem: string): string {
+    const privateKeyObject = crypto.createPrivateKey({
       key: privateKeyPem.replace(/\\n/g, '\n'),
       format: 'pem',
       type: 'pkcs8'
     });
-    const publicKeyObject = this.crypto.createPublicKey(privateKeyObject)
-    return publicKeyObject.export({ type: 'spki', format: 'pem' });
+    const publicKeyObject = crypto.createPublicKey(privateKeyObject)
+    const key = publicKeyObject.export({ type: 'spki', format: 'pem' });
+    if (typeof key !== 'string') {
+      return key.toString('utf-8')
+    }
+    return key
   }
 
   private _rsaPrivatePublicKeyGeneration() {
-    const { publicKey, privateKey } = this.crypto.generateKeyPairSync('rsa', {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 2048,
       publicKeyEncoding: {
         type: 'spki',
@@ -75,8 +76,7 @@ export class NodeCrypto {
 
 
   public async encrypt(algo: 'aes-256-gcm', key: string, payload: any, exp: number): Promise<string> {
-    await this.__init()
-    const keyHash = this.crypto.createHash('sha256').update(key).digest();
+    const keyHash = crypto.createHash('sha256').update(key).digest();
     const newPayload = { payload: payload, exp: exp }
     const { iv, encrypted, tag } = this._encrypt(algo, keyHash, newPayload)
     return tokenFormatCreate(
@@ -93,8 +93,7 @@ export class NodeCrypto {
   }
 
   public async decrypt<T>(algo: 'aes-256-gcm', key: string, encryptedData: { iv: string, encrypted: string, tag: string }) {
-    await this.__init()
-    const keyHash = this.crypto.createHash('sha256').update(key).digest();
+    const keyHash = crypto.createHash('sha256').update(key).digest();
     return this._decrypt(algo, keyHash, encryptedData) as { payload: T, exp: number }
   }
 
@@ -102,14 +101,13 @@ export class NodeCrypto {
 
   // --- RSA-OAEP Hybrid ---
   public async encryptRSA(payload: any, publicKey: string, exp: number): Promise<string> {
-    await this.__init()
-    const symmetricKey = this.crypto.randomBytes(32);
+    const symmetricKey = crypto.randomBytes(32);
     const newPayload = { payload: payload, exp: exp }
     const { iv, encrypted, tag } = this._encrypt('aes-256-gcm', symmetricKey, newPayload)
-    const encryptedSymmetricKey = this.crypto.publicEncrypt(
+    const encryptedSymmetricKey = crypto.publicEncrypt(
       {
         key: publicKey,
-        padding: this.crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
         oaepHash: 'sha256'
       },
       symmetricKey
@@ -129,26 +127,23 @@ export class NodeCrypto {
   }
 
   public async decryptRSA<T>(privateKey: string, encryptedKey: string, encryptedData: { iv: string, encrypted: string, tag: string }) {
-    await this.__init()
-    const decryptedSymmetricKey = this.crypto.privateDecrypt(
+    const decryptedSymmetricKey = crypto.privateDecrypt(
       {
         key: privateKey,
-        padding: this.crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
         oaepHash: 'sha256'
       },
-      Buffer.from(encryptedKey,'base64')
+      Buffer.from(encryptedKey, 'base64')
     );
     return this._decrypt('aes-256-gcm', decryptedSymmetricKey, encryptedData) as { payload: T, exp: number }
   }
 
 
   public async rsaPrivatePublicKeyGeneration() {
-    await this.__init()
     return this._rsaPrivatePublicKeyGeneration()
   }
 
   public async rsaPublicKeyGeneration(privateKeyPem: string) {
-    await this.__init()
     return this._rsaPublicKeyGeneration(privateKeyPem)
   }
 

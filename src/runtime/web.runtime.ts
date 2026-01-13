@@ -79,7 +79,7 @@ export class WebCrypto {
     return `-----BEGIN ${type} KEY-----\n${pemContents}\n-----END ${type} KEY-----`;
   }
 
-    // Import RSA public key from PEM
+  // Import RSA public key from PEM
   private async __importPublicKey(publicKeyPem: string): Promise<CryptoKey> {
     const keyData = this.__pemToArrayBuffer(publicKeyPem, 'PUBLIC');
     return await crypto.subtle.importKey(
@@ -148,16 +148,20 @@ export class WebCrypto {
     const ivBuffer = this.__base64ToUint8Array(iv);
     const encryptedBuffer = this.__base64ToUint8Array(encrypted);
 
-    const decryptedBuffer = await crypto.subtle.decrypt(
-      {
-        name: algo,
-        iv: ivBuffer,
-        tagLength: 128
-      },
-      key,
-      encryptedBuffer
-    );
-    return JSON.parse(this.textDecoder.decode(decryptedBuffer));
+    try {
+      const decryptedBuffer = await crypto.subtle.decrypt(
+        {
+          name: algo,
+          iv: ivBuffer,
+          tagLength: 128
+        },
+        key,
+        encryptedBuffer
+      );
+      return JSON.parse(this.textDecoder.decode(decryptedBuffer));
+    } catch (error) {
+      throw new Error('Invalid Key')
+    }
   }
 
 
@@ -222,6 +226,7 @@ export class WebCrypto {
     const newPayload = { payload: payload, exp: exp };
     const { iv, encrypted } = await this._encrypt(algo, cryptoKey, newPayload);
 
+
     return tokenFormatCreate(
       {
         runtime: 'web',
@@ -284,8 +289,8 @@ export class WebCrypto {
   }
 
   // Public method: Asymmetric decryption (RSA-OAEP + AES-256-GCM)
-  public async decryptRSA<T>(privateKeyPem: string,encryptedKey: string,encryptedData: { iv: string; encrypted: string}
-): Promise<{ payload: T; exp: number }> {
+  public async decryptRSA<T>(privateKeyPem: string, encryptedKey: string, encryptedData: { iv: string; encrypted: string }
+  ): Promise<{ payload: T; exp: number }> {
     // Import RSA private key
     const privateKey = await this.__importPrivateKey(privateKeyPem);
 

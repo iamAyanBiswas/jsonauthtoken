@@ -1,3 +1,5 @@
+import { NodeRuntime, JsonAuthTokenExpiry, RuntimeWiseAlgorithmMap, GenerateKeyPair } from '../types';
+
 import { NODE_RUNTIME } from './config/name.config'
 import { RUNTIME_DEFAULT_ALGORITHM, SUPPORTED_ALGORITHM } from './config/algo.config'
 import { isExpired, print, tokenFormatVerify } from './lib/functions.lib'
@@ -18,7 +20,7 @@ export class NodeCryptoModule<R extends NodeRuntime> {
         try {
             if (dev) this.dev = true
             if (runtime) {
-                if (!NODE_RUNTIME.includes(runtime)) {
+                if (runtime && !NODE_RUNTIME.includes(runtime)) {
                     throw new Error("Unsupported runtime")
                 }
                 this.runtime = runtime
@@ -81,7 +83,7 @@ export class NodeCryptoModule<R extends NodeRuntime> {
     }
 
     private async verifyToken<T>(token: string, key: string) {
-        const { meta, encrypted } = tokenFormatVerify(token)
+        const { meta, encrypted } = tokenFormatVerify(this.runtime, token)
         const { runtime, algo, type, v, iv, tag, encryptedKey } = meta
 
         if (this.runtime !== runtime) {
@@ -170,9 +172,10 @@ export class NodeCryptoModule<R extends NodeRuntime> {
 
 class PrivatePublicKeyGeneration {
     private web = new WebCrypto()
+    private node = new NodeCrypto()
 
-    public async generateKeyPair(runtime?: 'web', dev?: boolean): Promise<GenerateKeyPair> {
-        let finalRuntime: 'web' = 'web'
+    public async generateKeyPair(runtime?: 'web' | 'node', dev?: boolean): Promise<GenerateKeyPair> {
+        let finalRuntime: 'web' | 'node' = 'web'
         const development = dev === true ? true : false
         try {
             if (runtime) {
@@ -181,31 +184,48 @@ class PrivatePublicKeyGeneration {
                 }
                 finalRuntime = runtime
             }
-            const { privateKey, publicKey } = await this.web.rsaPrivatePublicKeyGeneration()
-            print({ dev: development, color: 'green' }, 'Current Runtime: ', finalRuntime)
-            print({ dev: development, color: 'green' }, { privateKey, publicKey })
-            return { privateKey, publicKey }
+
+            print({ dev: development, color: 'green' }, 'Current Runtime for Key Generation: ', finalRuntime)
+
+            if (runtime === 'node') {
+                const { privateKey, publicKey } = await this.node.rsaPrivatePublicKeyGeneration()
+                print({ dev: development, color: 'green' }, { privateKey, publicKey })
+                return { privateKey, publicKey }
+            }
+            else {
+                const { privateKey, publicKey } = await this.web.rsaPrivatePublicKeyGeneration()
+                print({ dev: development, color: 'green' }, { privateKey, publicKey })
+                return { privateKey, publicKey }
+            }
+
         } catch (error) {
             print({ dev: development, color: 'red' }, error)
             throw error
         }
     }
 
-    public async generatePublicKey(privateKeyPem: string, runtime?: 'web', dev?: boolean): Promise<string> {
-        let finalRuntime: 'web' = 'web'
+    public async generatePublicKey(privateKeyPem: string, runtime?: 'web' | 'node', dev?: boolean): Promise<string> {
+        let finalRuntime: 'web' | 'node' = 'web'
         const development = dev === true ? true : false
         try {
             if (runtime) {
                 if (!NODE_RUNTIME.includes(runtime)) {
-                    throw new Error("Unsupported runtime")
+                    throw new Error("Unsupported runtime (please select runtime 'web' or 'node')")
                 }
                 finalRuntime = runtime
             }
+            print({ dev: development, color: 'green' }, 'Current Runtime for Key Generation: ', finalRuntime)
+            if (runtime === 'node') {
+                const publicKey = await this.node.rsaPublicKeyGeneration(privateKeyPem)
+                print({ dev: development, color: 'green' }, publicKey)
+                return publicKey
+            }
+            else {
+                const publicKey = await this.web.rsaPublicKeyGeneration(privateKeyPem)
+                print({ dev: development, color: 'green' }, publicKey)
+                return publicKey
+            }
 
-            const publicKey = await this.web.rsaPublicKeyGeneration(privateKeyPem)
-            print({ dev: development, color: 'green' }, 'Current Runtime: ', finalRuntime)
-            print({ dev: development, color: 'green' }, publicKey)
-            return publicKey
         } catch (error) {
             print({ dev: development, color: 'red' }, error)
             throw error
@@ -214,20 +234,18 @@ class PrivatePublicKeyGeneration {
 }
 
 const p2kgObject = new PrivatePublicKeyGeneration()
-const generateKeyPair = (options?: { runtime?: 'web'; dev?: boolean }) => {
+const generateKeyPair = (options?: { runtime?: 'web' | 'node'; dev?: boolean }) => {
     const { runtime, dev } = options || {};
     return p2kgObject.generateKeyPair(runtime, dev);
 };
-const generatePublicKey = (privateKeyPem: string, options?: { runtime?: 'web'; dev?: boolean }) => {
+const generatePublicKey = (privateKeyPem: string, options?: { runtime?: 'web' | 'node'; dev?: boolean }) => {
     const { runtime, dev } = options || {};
     return p2kgObject.generatePublicKey(privateKeyPem, runtime, dev);
 };
 
 export const JAT = <R extends NodeRuntime>({ runtime, dev }: { runtime?: R, dev?: boolean } = {}) => new NodeCryptoModule({ runtime: runtime, dev: dev })
-export const getSupportedAlgorithm = () => SUPPORTED_ALGORITHM['web']
 
 
-const jat = JAT({})
 
 export const P2KG = {
     generateKeyPair: generateKeyPair,

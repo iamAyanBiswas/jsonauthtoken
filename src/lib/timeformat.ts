@@ -1,3 +1,5 @@
+import { JsonAuthTokenExpiry, TimeUnit } from '../../types';
+
 export function jatTimeFormatter(input: JsonAuthTokenExpiry): number {
   // If number → assume seconds directly
   if (typeof input === 'number') {
